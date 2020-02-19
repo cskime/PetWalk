@@ -8,6 +8,7 @@
 <p align="center">
 	<img src="images/PetWalk-description.png" alt="Page Description" width="80%">
 </p>
+
 ## Using Skills
 
 - Swift, Firestore, MapKit, UIView Animation
@@ -16,7 +17,7 @@
 
 - MVC Pattern을 적용하려고 시도했지만, app 크기가 커지면서 여러 개의 MVC 모듈을 적절하게 결합하지 못하고 각 part에 맞게 비지니스 로직을 분리하지 못함
 
-  - 기타 Delegate Pattern 및 Singleton Pattern 사용
+- 기타 Delegate Pattern 및 Singleton Pattern 사용
 
 - `Cloud Firestore`, `Cloud Storage`를 사용한 반려동물 정보 및 산책 기록 데이터 관리
 
