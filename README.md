@@ -1,73 +1,95 @@
+# Pet Walk
 
-Pet Walk
+## Description
 
-- 
+- 강아지를 키우는 사람들에게 강아지와 산책하는 것에 동기를 부여하기 위한 앱
+- 강아지만 즐거운게 아니라 강아지를 키우는 사람들도 강아지와 함께 산책하며 재미를 느낄 수 있도록 산책 장소를 정하고 실제로 산책을 다녀왔을 때 보상을 받는 등 재미 요소가 있어야겠다고 생각해서 개발
 
-Description
+<p align="center">
+	<img src="images/PetWalk-description.png" alt="Page Description" width="80%">
+</p>
+## Using Skills
 
-- 반려동물과 산책하면서 주인도 재미를 느낄 수 있도록 주어진 산책 지점을 찍고 오면 보상을 받을 수 있는 앱
-- 기능 보완을 거쳐 추후 앱스토어 출시 예정
+- Swift, Firestore, MapKit, UIView Animation
 
-Tech Stack
+## Architecture
 
+- MVC Pattern을 적용하려고 시도했지만, app 크기가 커지면서 여러 개의 MVC 모듈을 적절하게 결합하지 못하고 각 part에 맞게 비지니스 로직을 분리하지 못함
 
+  - 기타 Delegate Pattern 및 Singleton Pattern 사용
 
-Firebase
+- `Cloud Firestore`, `Cloud Storage`를 사용한 반려동물 정보 및 산책 기록 데이터 관리
 
-- Cloud Firestore를 사용하여 반려동물 정보 및 산책 기록 데이터 관리
-- Cloud Storage에 이미지를 저장하고 url을 데이터베이스에 저장
+  ```json
+  {
+    "Pets": [
+      {
+        "name": "mesh",
+        "breed": "welshcorgi",
+        "birth": "2020-01-01",
+        "gender": "M",
+        "profileURL": "{imageURL}",
+        "weight": 10,	// kg
+        "walks": [
+          {
+            "date": "",
+            "duration": 3209,	// sec
+            "weather": "",
+            "dust": "",
+            "images": [
+              "{imageURL}",
+              "{imageURL}",
+            ]
+          },
+        ]
+      },
+    ]
+  }
+  ```
 
-UIView Animation
+## Trouble Shooting
 
-- UIView.animate()으로 animation 구현
-- UIView.animateKeyFrames()을 사용하여 여러 동작의 연속적인 animation 구현
+- Database에 데이터를 저장하는 동안 예상치 못한 사용자 입력 때문에 메인 화면에서 잘못된 데이터를 받아오는 문제
 
-MapKit
+  - Database와 통신하는 시간이 길어지면서 데이터를 저장하고 불러오는 작업이 끝나기 전에 사용자가 의도하지 않은 동작을 할 가능성이 있음. 의도하지 않은 사용자 입력을 막고 서버와 통신하고 있다는 것을 인식시키기 위해 별도의 로딩 화면(`LoadingViewController`)을 만들어서 해결
 
-- CoreLocation을 활용하여 사용자 위치 tracking
-- 위경도 좌표를 이용한 실제 거리 측정 및 MKAnnotation 및 MKAnnotationView을 활용한 위치 정보 시각화
+  - Database 관련 작업의 성공/실패 여부에 따라 다음에 수행할 추가 작업을 위한 `LoadingViewControllerInterface` 구현
 
-Architecture Design
+    ```swift
+    protocol LoadingViewControllerInterface {
+      // Database 작업에 성공했을 때, 추가작업을 completion으로 처리
+      func complete(completion: @escaping ()->())
+      // Database 작업에 실패했을 때, 사용자 알림(alert)을 위한 message 전달
+      func fail(message: String)
+    }
+    ```
 
-- MVC Pattern을 적용한 class design
+- 산책한 기록을 볼 수 있는 화면에서 사용자가 비어있는 화면을 오랫동안 보고 있어야 하는 문제
 
-Part
+  - Firebase storage에 저장된 이미지를 받아오는 요청에 대한 Firebase 서버의 응답시간이 지연되어 발생하는 문제
 
-Database
+  - 산책 기록 화면이 처음 나타날 때 firebase에 이미지를 요청해서 받아온 결과를 별도로 **캐싱(caching)**해 두고, 이후 산책 화면이 나타날 때는 Firebase 서버에 이미지를 요청하지 않고 캐싱해 둔 이미지를 사용하도록 함
 
-- 데이터 구조 설계 및 Cloud Firestore, Cloud Storage를 이용한 데이터베이스 관리
+  - 최초로 이미지를 요청하거나 새로운 이미지가 update 되었을 때만 firebase 서버와 통신하도록 함
 
-MapKit
+    ```swift
+    // MARK: Data Caching
+    
+    // caching when register new pet
+    var currentPets = [Pet]()             
+    // caching when walk list appear at first or new walk info updated
+    var walksForPet = [String: [Walk]]()  
+    
+    // MARK: Image Caching
+    
+    // caching when pet list appear at first
+    var petProfileCache = [String: UIImage]()
+    // caching when walk list appear at first or new alk info updated
+    var walkImageCache = [String: [UIImage]]()
+    ```
 
-- CoreLocation을 사용한 
+## What's New
 
-
-
-- Tech Stack : Firebase, MVC Pattern, Singleton Pattern, MapKit, UIView Animation
-- Part : Firebase, Design Pattern, MapKit
-  - Firebase
-    - 사용자 및 반려동물 정보와 산책 정보 저장을 위해 Firebase의 Cloud Firestore을 사용하고, 이미지 저장에 Firebase Cloud Storage 사용
-    - Firestore는 `Collection-Document 데이터 구조 및 Document가 하위 Collection을 갖는 구조이기 때문에, 하나의 Pet object가 여러 개의 Walk object를 가져야 하는 데이터 구조를 쉽게 표현하기에 적합
-      <img src="" alt="Data Architecture" width="50%">
-  - Design Pattern
-    - MVC : MVC Pattern을 적용하여 프로젝트의 유지보수 효율을 높임 
-      <img src="" alt="MVC Pattern Architecture" width="50%">
-    - Singleton : Database에 반려동물 및 산책 기록 데이터에 대한 요청을 줄이기 위해 별도의 메모리에 캐싱(caching)해서 사용하고, singleton pattern을 적용하여 프로젝트 전체에서 공통으로 접근할 수 있도록 함
-      <img src="" alt="Singleton and Caching Data" width="50%">
-  - MapKit : CoreLocation과 MKMapView를 활용하여 사용자의 위치를 추적하고 목표 지점과의 거리(m)를 측정하여 목표 지점에 도달했는지 확인
-- Learn : 해커톤을 통해 새롭게 배운 것들
-  - 
-
-
-
-
-
-
-
-Education
-
-What's New
-
-- [Date Class]()
-- [Cloud Firestore]()
-- [UIView Animation]()
+- [iOS Date Handling 정리]() : WIP
+- [Firebase: Cloud Firestore 정리]() : WIP
+- [UIView Animation 정리]() : WIP
