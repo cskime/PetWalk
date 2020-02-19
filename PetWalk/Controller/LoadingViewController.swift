@@ -8,7 +8,12 @@
 
 import UIKit
 
-class LoadingViewController: UIViewController {
+protocol LoadingViewControllerInterface {
+  func complete(completion: @escaping ()->())
+  func fail(message: String)
+}
+
+class LoadingViewController: UIViewController, LoadingViewControllerInterface {
   
   override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
     super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
